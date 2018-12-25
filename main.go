@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"./auth"
-	"./models"
+	"./util"
 
 	"github.com/gorilla/mux"
 )
@@ -21,15 +22,29 @@ func main() {
 
 }
 
+// LoginData is the data that should be given when a user tries to login
+type LoginData struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var l models.LoginModel
+	var l LoginData
 	err := decoder.Decode(&l)
-	if err != nil {
-		log.Println(err)
+	if util.CheckError(err, "Error parsing login data") {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error: %v", err)
+		return
 	}
 
-	if id, ok := auth.Login(l.Name, l.ID); ok {
-		json.NewEncoder(w).Encode(models.LoginResponseModel{SessionID: id})
+	id, ok, err := auth.Login(l.Name, l.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error: %v", err)
+	} else if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
+		json.NewEncoder(w).Encode(id)
 	}
 }
