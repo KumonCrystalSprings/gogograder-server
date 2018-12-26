@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -67,7 +66,6 @@ func newSession(name string) string {
 	}
 	sessions[id] = s
 
-	fmt.Println(sessions)
 	return id
 }
 

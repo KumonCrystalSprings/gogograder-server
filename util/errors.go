@@ -7,9 +7,8 @@ func CheckError(err error, msg string) bool {
 	if err != nil {
 		if msg != "" {
 			log.Println(msg)
-		} else {
-			log.Println(err)
 		}
+		log.Println(err)
 		return true
 	}
 	return false
@@ -19,9 +18,8 @@ func CheckError(err error, msg string) bool {
 func CheckErrorFatal(err error, msg string) {
 	if err != nil {
 		if msg != "" {
-			log.Fatalln(msg)
-		} else {
-			log.Fatalln(err)
+			log.Println(msg)
 		}
+		log.Fatalln(err)
 	}
 }
