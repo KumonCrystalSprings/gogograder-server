@@ -9,12 +9,14 @@ import (
 
 const sessionExpirationTime = int64(60 * 60 * 24)
 const sessionIDLength = 32
-const sessionCleanupInterval = 60 * 60
+
+// const sessionCleanupInterval = 1 * time.Hour
 
 // Session is a temporary user session given after a successful login
 type Session struct {
-	Name    string
-	Expires int64
+	Name        string
+	Expires     int64
+	RecordSheet string
 }
 
 func (s Session) expired() bool {
@@ -26,17 +28,20 @@ var sessions map[string]Session
 func init() {
 	sessions = make(map[string]Session)
 
-	sessionCleanupTicker := time.NewTicker(sessionCleanupInterval * time.Second)
-	go func() {
-		for {
-			select {
-			case <-sessionCleanupTicker.C:
-				removeExpiredSessions()
-			}
-		}
-	}()
+	rand.Seed(time.Now().UnixNano())
+
+	// sessionCleanupTicker := time.NewTicker(sessionCleanupInterval)
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-sessionCleanupTicker.C:
+	// 			removeExpiredSessions()
+	// 		}
+	// 	}
+	// }()
 }
 
+// `letters` and `randString()` are used to generate the token for a new session
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func randString(n int) string {
@@ -47,7 +52,8 @@ func randString(n int) string {
 	return string(b)
 }
 
-func newSession(name string) string {
+// newSession takes in a name and creates a new session
+func newSession(name string, recordSheet string) string {
 	removeOlderSessions(name)
 
 	var id string
@@ -61,9 +67,11 @@ func newSession(name string) string {
 	}
 
 	s := Session{
-		Name:    name,
-		Expires: time.Now().Unix() + sessionExpirationTime,
+		Name:        name,
+		Expires:     time.Now().Unix() + sessionExpirationTime,
+		RecordSheet: recordSheet,
 	}
+	// fmt.Println(s)
 	sessions[id] = s
 
 	return id
@@ -79,27 +87,40 @@ func removeOlderSessions(name string) bool {
 	return false
 }
 
-func removeExpiredSessions() {
-	for id, s := range sessions {
-		if s.expired() {
-			delete(sessions, id)
-		}
-	}
-}
+// // removeExpiredSessions is run periodically to remove expired sessions
+// func removeExpiredSessions() {
+// 	for id, s := range sessions {
+// 		if s.expired() {
+// 			delete(sessions, id)
+// 		}
+// 	}
+// }
 
 // Login verifies if the name and id match records, and returns a new session ID if it does
-func Login(name string, id string) (string, bool, error) {
-	ok, err := db.CheckStudent(name, id)
+func Login(name string, password string) (string, bool, error) {
+	recordSheet, err := db.FetchStudent(name, password)
 	if err != nil {
 		return "", false, err
 	}
-	if ok {
-		return newSession(name), true, nil
+	if recordSheet != "" {
+		return newSession(name, recordSheet), true, nil
 	}
 	return "", false, nil
 }
 
-// VerifySession checks to see if the current session is valid
+// GetSession gets the current session's name and sheet ID if valid
+func GetSession(id string) (string, string) {
+	if _, ok := sessions[id]; ok {
+		if sessions[id].expired() {
+			delete(sessions, id)
+			return "", ""
+		}
+		return sessions[id].Name, sessions[id].RecordSheet
+	}
+	return "", ""
+}
+
+// VerifySession checks if the session is valid
 func VerifySession(id string) bool {
 	if _, ok := sessions[id]; ok {
 		if sessions[id].expired() {

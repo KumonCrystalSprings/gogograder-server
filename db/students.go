@@ -2,25 +2,25 @@ package db
 
 import "../util"
 
-// CheckStudent checks if a student is in the student list and if their ID matches
-func CheckStudent(name string, id string) (bool, error) {
+// FetchStudent checks if a student is in the student list and if their ID matches, and returns their record sheet ID if true
+func FetchStudent(name string, password string) (string, error) {
 	spreadsheet, err := fetchSpreadsheet(sc.Students)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	sheet, err := spreadsheet.SheetByIndex(0)
 	if util.CheckError(err, "Error in fetching students spreadsheet") {
-		return false, err
+		return "", err
 	}
 
-	for i := 1; i < len(sheet.Rows); i++ {
-		if sheet.Rows[i][0].Value == "" {
+	for i := 3; i < len(sheet.Rows); i++ {
+		if sheet.Rows[i][1].Value == "" {
 			continue
 		}
-		if sheet.Rows[i][0].Value == name && sheet.Rows[i][1].Value == id {
-			return true, nil
+		if sheet.Rows[i][1].Value == name && sheet.Rows[i][2].Value == password {
+			return parseSheetURL(sheet.Rows[i][3].Value), nil
 		}
 	}
-	return false, nil
+	return "", nil
 }
