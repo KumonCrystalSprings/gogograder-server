@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"strings"
 
@@ -33,12 +32,7 @@ func init() {
 	client := conf.Client(context.TODO())
 	service = spreadsheet.NewServiceWithClient(client)
 
-	// get sheet ID's
-	data, err = ioutil.ReadFile("config/sheets.json")
-	util.CheckErrorFatal(err, "Error in reading Google Sheet config file")
-
-	err = json.Unmarshal(data, &sc)
-	util.CheckErrorFatal(err, "Error in parsing Google Sheet config file")
+	sc = util.Config.Sheets
 
 	sc.Students = parseSheetURL(sc.Students)
 	sc.Worksheets = parseSheetURL(sc.Worksheets)

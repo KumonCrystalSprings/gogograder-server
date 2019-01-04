@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"./routes"
+	"./util"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/login", routes.LoginHandler).Methods("POST")
@@ -22,6 +25,5 @@ func main() {
 
 	fmt.Println("GoGoGrader server started!")
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
-
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(util.Config.Port), nil))
 }
