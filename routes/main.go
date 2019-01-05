@@ -13,12 +13,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func setDefaultHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	// w.Header().Set("Access-Control-Allow-Methods", "GET")
-	// w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0")
-	// w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// w.Header().Set("Vary", "Accept-Encoding")
+func setDefaultHeaders(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 // LoginData is the data that should be given when a user tries to login
@@ -28,7 +26,7 @@ type LoginData struct {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	setDefaultHeaders(w)
+	setDefaultHeaders(&w)
 	decoder := json.NewDecoder(r.Body)
 	var l LoginData
 	err := decoder.Decode(&l)
@@ -61,7 +59,7 @@ func authSession(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func WorksheetListHandler(w http.ResponseWriter, r *http.Request) {
-	setDefaultHeaders(w)
+	setDefaultHeaders(&w)
 	if !authSession(w, r) {
 		return
 	}
@@ -78,7 +76,7 @@ func WorksheetListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func WorksheetPageHandler(w http.ResponseWriter, r *http.Request) {
-	setDefaultHeaders(w)
+	setDefaultHeaders(&w)
 	if !authSession(w, r) {
 		return
 	}
@@ -98,7 +96,7 @@ func WorksheetPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func WorksheetActivityWriteHandler(w http.ResponseWriter, r *http.Request) {
-	setDefaultHeaders(w)
+	setDefaultHeaders(&w)
 	if !authSession(w, r) {
 		return
 	}
