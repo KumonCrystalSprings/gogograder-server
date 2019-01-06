@@ -131,3 +131,12 @@ func VerifySession(id string) bool {
 	}
 	return false
 }
+
+func GetStudentSheet(name string) string {
+	for _, s := range sessions {
+		if s.Name == name {
+			return s.RecordSheet
+		}
+	}
+	return ""
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"../auth"
@@ -15,8 +16,8 @@ import (
 
 func setDefaultHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	// (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	// (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 // LoginData is the data that should be given when a user tries to login
@@ -27,6 +28,10 @@ type LoginData struct {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	setDefaultHeaders(&w)
+
+	// b, err := ioutil.ReadAll(r.Body)
+	// fmt.Println(b)
+
 	decoder := json.NewDecoder(r.Body)
 	var l LoginData
 	err := decoder.Decode(&l)
@@ -113,7 +118,14 @@ func WorksheetActivityWriteHandler(w http.ResponseWriter, r *http.Request) {
 	name, _ := auth.GetSession(r.URL.Query().Get("id"))
 
 	a.Name = name
-	a.Date = db.JSONDate(time.Now())
+	a.Sheet = auth.GetStudentSheet(name)
+	a.Date = time.Now()
+
+	if strings.Contains(a.Worksheet, "Math") {
+		a.Subject = "Math"
+	} else {
+		a.Subject = "Reading"
+	}
 
 	err = db.WriteStudentActivity(&a)
 

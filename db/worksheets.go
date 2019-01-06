@@ -1,6 +1,8 @@
 package db
 
 import (
+	"strings"
+
 	"../util"
 )
 
@@ -11,9 +13,12 @@ func FetchWorksheetNames() ([]string, error) {
 		return nil, err
 	}
 
-	names := make([]string, len(spreadsheet.Sheets))
-	for i, sheet := range spreadsheet.Sheets {
-		names[i] = sheet.Properties.Title
+	var names []string
+	for _, sheet := range spreadsheet.Sheets {
+		if strings.Contains(sheet.Properties.Title, "*") || strings.Contains(sheet.Properties.Title, "(") {
+			continue
+		}
+		names = append(names, sheet.Properties.Title)
 	}
 
 	return names, nil
@@ -34,7 +39,7 @@ func FetchWorksheetPage(ws string, page string) (ret WorksheetPage, ok bool, err
 		return
 	}
 
-	sheet, err := spreadsheet.SheetByIndex(0)
+	sheet, err := spreadsheet.SheetByTitle(ws)
 	if util.CheckError(err, "Error in fetching students spreadsheet") {
 		return
 	}
@@ -56,7 +61,6 @@ func FetchWorksheetPage(ws string, page string) (ret WorksheetPage, ok bool, err
 					ret.Answers = append(ret.Answers, rowB[j].Value)
 					ret.SideB++
 				} else {
-					ret.SideB += ret.SideA
 					break
 				}
 			}

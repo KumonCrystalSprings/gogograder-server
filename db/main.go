@@ -48,6 +48,9 @@ func fetchSpreadsheet(id string) (spreadsheet.Spreadsheet, error) {
 func parseSheetURL(url string) (id string) {
 	start := strings.LastIndex(url, "/d/") + len("/d/")
 	end := strings.LastIndex(url, "/edit")
+	if start == -1 || end == -1 {
+		return
+	}
 	id = url[start:end]
 	return
 }

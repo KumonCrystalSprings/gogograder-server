@@ -5,53 +5,64 @@ import (
 	"time"
 
 	"../util"
+
+	spreadsheet "gopkg.in/Iwark/spreadsheet.v2"
 )
 
-type JSONDate time.Time
-
-func (d JSONDate) MarshalJSON() ([]byte, error) {
-	dateString := time.Time(d).Format("1/2/2006")
-	return []byte(dateString), nil
-}
-
-func (d JSONDate) UnmarshalJSON(b []byte) error {
-	s := string(b)
-	t, err := time.Parse("1/2/2006", s)
-	d = JSONDate(t)
-	return err
-}
-
-func (d JSONDate) String() string {
-	return time.Time(d).Format("1/2/2006")
-}
-
 type StudentActivity struct {
-	Name      string   `json:"name"`
-	Date      JSONDate `json:"date"`
-	Worksheet string   `json:"worksheet"`
-	Page      uint     `json:"page"`
-	Score     uint     `json:"score"`
-	Time      uint     `json:"time"`
+	Name         string    `json:"name"`
+	Sheet        string    `json:"sheet"`
+	Subject      string    `json:"subject"`
+	Date         time.Time `json:"date"`
+	Worksheet    string    `json:"worksheet"`
+	Page         uint      `json:"page"`
+	Score        uint      `json:"score"`
+	Time         uint      `json:"time"`
+	ReportedTime uint      `json:"reportedTime"`
 }
 
 func WriteStudentActivity(a *StudentActivity) error {
-	spreadsheet, err := fetchSpreadsheet(sc.Records)
+	recordSheet, err := fetchSpreadsheet(sc.Records)
 	if err != nil {
 		return err
 	}
 
-	sheet, err := spreadsheet.SheetByIndex(0)
+	recordTab, err := recordSheet.SheetByIndex(0)
 	if util.CheckError(err, "Error in fetching students spreadsheet") {
 		return err
 	}
 
-	index := len(sheet.Rows)
-	sheet.Update(index, 0, a.Name)
-	sheet.Update(index, 1, fmt.Sprint(a.Date))
-	sheet.Update(index, 2, a.Worksheet)
-	sheet.Update(index, 3, fmt.Sprint(a.Page))
-	sheet.Update(index, 4, fmt.Sprint(a.Score))
-	sheet.Update(index, 5, fmt.Sprint(a.Time))
+	studentSheet, err := fetchSpreadsheet(a.Sheet)
+	if err != nil {
+		return err
+	}
 
-	return sheet.Synchronize()
+	studentTab, err := studentSheet.SheetByTitle("RT " + a.Subject)
+	if util.CheckError(err, "Error in fetching students spreadsheet") {
+		return err
+	}
+
+	err1 := addActivity(a, recordTab)
+	err2 := addActivity(a, studentTab)
+
+	if err1 != nil {
+		return err1
+	}
+
+	return err2
+}
+
+func addActivity(a *StudentActivity, tab *spreadsheet.Sheet) error {
+	index := len(tab.Rows)
+
+	tab.Update(index, 0, a.Name)
+	tab.Update(index, 1, a.Date.Format("1/2/2006"))
+	tab.Update(index, 3, a.Date.Format("3:04 PM"))
+	tab.Update(index, 4, a.Worksheet)
+	tab.Update(index, 5, fmt.Sprint(a.Page))
+	tab.Update(index, 6, fmt.Sprint(a.Score))
+	tab.Update(index, 8, fmt.Sprint(a.Time))
+	tab.Update(index, 10, fmt.Sprint(a.ReportedTime))
+
+	return tab.Synchronize()
 }
