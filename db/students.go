@@ -18,8 +18,8 @@ func FetchStudent(name string, password string) (string, error) {
 		if sheet.Rows[i][1].Value == "" {
 			continue
 		}
-		if sheet.Rows[i][1].Value == name && sheet.Rows[i][2].Value == password {
-			return parseSheetURL(sheet.Rows[i][3].Value), nil
+		if sheet.Rows[i][1].Value == name && sheet.Rows[i][4].Value == password {
+			return parseSheetURL(sheet.Rows[i][5].Value), nil
 		}
 	}
 	return "", nil
