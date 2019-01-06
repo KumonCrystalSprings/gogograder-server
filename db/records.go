@@ -27,7 +27,7 @@ func WriteStudentActivity(a *StudentActivity) error {
 		return err
 	}
 
-	recordTab, err := recordSheet.SheetByIndex(0)
+	recordTab, err := recordSheet.SheetByTitle("RT " + a.Subject)
 	if util.CheckError(err, "Error in fetching students spreadsheet") {
 		return err
 	}
