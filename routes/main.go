@@ -119,7 +119,15 @@ func WorksheetActivityWriteHandler(w http.ResponseWriter, r *http.Request) {
 
 	a.Name = name
 	a.Sheet = auth.GetStudentSheet(name)
-	a.Date = time.Now()
+
+	pst, err := time.LoadLocation("America/Los_Angeles")
+	if util.CheckError(err, "could not get local time") {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "[ERROR] Error getting local time")
+		return
+	}
+
+	a.Date = time.Now().In(pst)
 
 	if strings.Contains(a.Worksheet, "Math") {
 		a.Subject = "Math"
